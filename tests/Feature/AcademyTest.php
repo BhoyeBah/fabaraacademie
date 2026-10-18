@@ -177,6 +177,19 @@ class AcademyTest extends TestCase
         $this->get('/')->assertHeader('X-Frame-Options', 'DENY')->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 
+    public function test_assets_utilisent_https_derriere_un_proxy_securise(): void
+    {
+        $response = $this->call('GET', '/', server: [
+            'HTTP_HOST' => 'fabara-academie.com',
+            'HTTP_X_FORWARDED_HOST' => 'fabara-academie.com',
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+        ]);
+
+        $response->assertOk()
+            ->assertSee('href="https://fabara-academie.com/css/app.css"', false)
+            ->assertSee('src="https://fabara-academie.com/js/app.js"', false);
+    }
+
     public function test_les_pages_admin_s_affichent(): void
     {
         $admin = User::factory()->admin()->create();
