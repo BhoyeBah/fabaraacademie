@@ -92,6 +92,50 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache
 
 ⚠️ **Gardez précieusement `APP_KEY`** (dans `.env`) : c'est la clé qui chiffre les liens Drive. Si elle est perdue, il faudra recoller les liens.
 
+### Coolify sur un VPS Hetzner (Dockerfile)
+
+Le dépôt contient un `Dockerfile` multi-étapes : il construit les assets, installe les dépendances PHP de production et sert Laravel avec Apache sur le port `80`.
+
+1. Dans Coolify, ajoutez une ressource **Application** depuis le dépôt GitHub `BhoyeBah/fabaraacademie`, branche `main`, avec **Dockerfile** comme méthode de build. Le Dockerfile se trouve à la racine.
+2. Créez une base de données MySQL dans Coolify (ou utilisez une base MySQL/MariaDB accessible depuis le conteneur). Pour `DB_HOST`, utilisez le nom d'hôte interne fourni par Coolify, pas `127.0.0.1`.
+3. Ajoutez ces variables dans la configuration de l'application Coolify :
+
+```env
+APP_NAME="Fabara Académie"
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:...                 # générée une fois avec : php artisan key:generate --show
+APP_URL=https://votredomaine.com
+
+DB_CONNECTION=mysql
+DB_HOST=nom-interne-du-service-mysql
+DB_PORT=3306
+DB_DATABASE=fabara
+DB_USERNAME=...
+DB_PASSWORD=...
+
+SESSION_DRIVER=database
+SESSION_SECURE_COOKIE=true
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.votrehebergeur.com
+MAIL_PORT=587
+MAIL_USERNAME=contact@votredomaine.com
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS=contact@votredomaine.com
+
+ADMIN_PATH=espace-gestion
+```
+
+Générez `APP_KEY` une seule fois avec `php artisan key:generate --show`, puis enregistrez-la dans Coolify et conservez-la : ne la régénérez pas lors des déploiements.
+4. Dans les commandes de pré-déploiement Coolify, ajoutez `php artisan migrate --force`. Cela crée et met à jour les tables avant le démarrage de la nouvelle version.
+5. Déployez. Associez votre domaine à l'application sur le port `80` et activez le HTTPS automatique dans Coolify.
+6. Une fois la base migrée, ouvrez un terminal sur le conteneur et créez le compte administrateur avec `php artisan app:create-admin votre@email.com`. Pour installer le catalogue de démonstration, lancez aussi `php artisan db:seed --force` (facultatif).
+
+Les fichiers écrits dans `storage/app` doivent survivre aux redéploiements : si l'application y stocke des fichiers, ajoutez dans Coolify un stockage persistant monté sur `/var/www/html/storage/app`. Les sessions, le cache et la file d'attente utilisent ici MySQL. Sauvegardez régulièrement la base de données et les fichiers persistants.
+
 ---
 
 ## 4. Utilisation au quotidien
