@@ -35,12 +35,14 @@ composer install
 cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite        # Windows : créez un fichier vide database/database.sqlite
-php artisan migrate --seed            # crée les tables + 14 formations d'exemple
-php artisan app:create-admin vous@exemple.com   # crée VOTRE compte admin (mot de passe demandé)
+# Configurez ADMIN_EMAIL et ADMIN_PASSWORD dans .env avant de lancer le seeding.
+php artisan migrate --seed            # crée les tables, le compte admin et 14 formations d'exemple
 php artisan serve
 ```
 
 Ouvrez http://localhost:8000, puis connectez-vous avec le compte admin créé.
+Le mot de passe doit rester dans `.env` (jamais dans le code ou le dépôt). Pour changer le compte
+admin, mettez à jour ces deux variables puis relancez `php artisan db:seed --class=AdminSeeder`.
 
 ---
 
@@ -76,6 +78,8 @@ MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=contact@votresite.com
 
 ADMIN_PATH=espace-gestion       # adresse de l'espace admin, changez-la si vous voulez
+ADMIN_EMAIL=admin@votresite.com
+ADMIN_PASSWORD=un-mot-de-passe-fort
 ```
 
 5. Puis, en SSH :
@@ -83,8 +87,7 @@ ADMIN_PATH=espace-gestion       # adresse de l'espace admin, changez-la si vous 
 ```bash
 php artisan key:generate
 php artisan migrate --force
-php artisan db:seed --force          # optionnel : formations d'exemple
-php artisan app:create-admin vous@exemple.com
+php artisan db:seed --force          # crée le compte admin configuré et le catalogue d'exemple
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
 
@@ -127,12 +130,14 @@ MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=contact@votredomaine.com
 
 ADMIN_PATH=espace-gestion
+ADMIN_EMAIL=admin@votredomaine.com
+ADMIN_PASSWORD=un-mot-de-passe-fort
 ```
 
 Générez `APP_KEY` une seule fois avec `php artisan key:generate --show`, puis enregistrez-la dans Coolify et conservez-la : ne la régénérez pas lors des déploiements.
 4. Dans les commandes de pré-déploiement Coolify, ajoutez `php artisan migrate --force`. Cela crée et met à jour les tables avant le démarrage de la nouvelle version.
 5. Déployez. Associez votre domaine à l'application sur le port `80` et activez le HTTPS automatique dans Coolify.
-6. Une fois la base migrée, ouvrez un terminal sur le conteneur et créez le compte administrateur avec `php artisan app:create-admin votre@email.com`. Pour installer le catalogue de démonstration, lancez aussi `php artisan db:seed --force` (facultatif).
+6. Une fois les variables `ADMIN_EMAIL` et `ADMIN_PASSWORD` configurées dans Coolify et la base migrée, ouvrez un terminal sur le conteneur et lancez `php artisan db:seed --force` pour créer le compte administrateur et, si souhaité, le catalogue de démonstration.
 
 Les fichiers écrits dans `storage/app` doivent survivre aux redéploiements : si l'application y stocke des fichiers, ajoutez dans Coolify un stockage persistant monté sur `/var/www/html/storage/app`. Les sessions, le cache et la file d'attente utilisent ici MySQL. Sauvegardez régulièrement la base de données et les fichiers persistants.
 

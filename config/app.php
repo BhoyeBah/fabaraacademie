@@ -17,6 +17,8 @@ return [
 
     // Adresse de l'espace admin (ex. https://votresite.com/espace-gestion). Changez-la dans .env.
     'admin_path' => env('ADMIN_PATH', 'espace-gestion'),
+    'admin_email' => env('ADMIN_EMAIL'),
+    'admin_password' => env('ADMIN_PASSWORD'),
 
     /*
     |--------------------------------------------------------------------------
